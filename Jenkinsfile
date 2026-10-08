@@ -1,49 +1,54 @@
+
 pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "shashankshashank123/devops-task-tracker"
+        DOCKER_IMAGE = "shashankshashank123/devops-task-tracker"
+        DOCKER_CREDENTIALS = "dockerhub-credentials"
+        IMAGE_TAG = "${new Date().format('yyyy-MM-dd-HHmmss')}"
     }
 
     stages {
 
-        stage("Checkout") {
+        stage("git-checkout") {
             steps {
                 checkout scm
             }
         }
 
-        stage("Build Docker Image") {
+        stage("image-build") {
             steps {
                 script {
-                    env.IMAGE_TAG = new Date().format("yyyy-MM-dd-HHmmss")
-                    env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-
-                    bat "docker build -t ${env.FULL_IMAGE} ."
-                    bat "docker tag ${env.FULL_IMAGE} ${env.IMAGE_NAME}:latest"
+                    bat "docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} ."
                 }
             }
         }
 
-        stage("Docker Login") {
+        stage("docker login") {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-credentials',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
-                    bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
+                script {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: "dockerhub-credentials",
+                            usernameVariable: "DOCKER_USERNAME",
+                            passwordVariable: "DOCKER_PASSWORD"
+                        )
+                    ]) {
+                        bat '''
+                            echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                        '''
+                    }
                 }
             }
         }
 
-        stage("Docker Push") {
+        stage("docker push") {
             steps {
-                bat "docker push %FULL_IMAGE%"
-                bat "docker push %IMAGE_NAME%:latest"
+                script {
+                    bat "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                }
             }
         }
     }
 }
+```
