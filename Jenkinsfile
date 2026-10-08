@@ -15,7 +15,13 @@ pipeline {
 
         stage("Build Docker Image") {
             steps {
-                sh "docker build -t %IMAGE_NAME%:latest ."
+                script {
+                    env.IMAGE_TAG = new Date().format("yyyy-MM-dd-HHmmss")
+                    env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+
+                    bat "docker build -t ${env.FULL_IMAGE} ."
+                    bat "docker tag ${env.FULL_IMAGE} ${env.IMAGE_NAME}:latest"
+                }
             }
         }
 
@@ -28,14 +34,15 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-                    sh "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
+                    bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
                 }
             }
         }
 
-        stage("Push Docker Image") {
+        stage("Docker Push") {
             steps {
-                sh "docker push %IMAGE_NAME%:latest"
+                bat "docker push %FULL_IMAGE%"
+                bat "docker push %IMAGE_NAME%:latest"
             }
         }
     }
