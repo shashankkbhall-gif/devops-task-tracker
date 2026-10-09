@@ -1,0 +1,41 @@
+
+pipeline {
+    agent any
+
+    environment {
+        image_name = "shashankshashank123/devops-task-tracker"
+    }
+
+    stages {
+        stage("git-checkout") {
+            steps {
+                checkout scm
+            }
+        }
+        stage("image-build") {
+            steps {
+                script {
+                    env.image_tag = new Date().format("yyyy-MM-dd-HHmmss")
+                    env.full_image = "${env.image_name}:${env.image_tag}"
+                }
+            }
+        }
+        stage("docker login") {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        bat "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                    }
+                }
+            }
+        }
+        stage("docker push") {
+            steps {
+                script {
+                    bat "docker build -t ${env.full_image} ."
+                    bat "docker push ${env.full_image}"
+                }
+            }
+        }
+    }
+}

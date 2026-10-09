@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DevOps Task Tracker</title>
+</head>
+<body>
+    <h1>DevOps Task Tracker</h1>
+
+    <form method="POST">
+        <input type="text" name="task" placeholder="Enter a task" required>
+        <button type="submit">Add Task</button>
+    </form>
+
+    <h2>Tasks</h2>
+
+    <ul>
+        {% for task in tasks %}
+            <li>{{ task }}</li>
+        {% else %}
+            <li>No tasks added yet.</li>
+        {% endfor %}
+    </ul>
+
+    <p>
+        Health:
+        <a href="/health">Check Application Health</a>
+    </p>
+</body>
+</html>
